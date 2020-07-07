@@ -1,9 +1,9 @@
 const puppeteer = require('puppeteer');
 const config = require('./config.json');
 
-/* fffgf
- * jgngng
- *
+/* Take five latest articles from cnet homepage.
+ * Get article link, news header and short summary from cnet homepage.
+ * Use parseArticle() on each fetched article for detailed article summary.
 */
 async function parseLatestCnetArticles() {
     const browser = await puppeteer.launch({});
@@ -21,7 +21,9 @@ async function parseLatestCnetArticles() {
                 const shortSummary = list[i].querySelector('p').innerText.trim();
                 data.push({ link, newsHeader, shortSummary });
             }
+
             return data;
+
         } catch (error) {
             console.log(error);
         }
@@ -34,11 +36,15 @@ async function parseLatestCnetArticles() {
         result.shortSummary = story.shortSummary;
         results.push(result);
     }
-    await browser.close();
-    return results
 
+    await browser.close();
+
+    return results;
 }
 
+/* Get article category, news header, short summary, tags, authors, publish timestamp,
+ * main image URL, pdf URL and full page screenshot image URL from article.
+*/
 async function parseArticle(link, browser) {
     try {
         let shouldCloseBrowser = false;
@@ -69,7 +75,9 @@ async function parseArticle(link, browser) {
 
             const tags = [];
             let tagElements = document.querySelector('#article-body .tagList');
-            // If the article is in video category, then timestamp is associated with different class as in other categories
+            /* If the article is in video category, then tags are associated with
+             * different class.
+            */
             if (!tagElements) {
                 tagElements = document.querySelector('#videoPage .videoTags');
             }
@@ -93,7 +101,9 @@ async function parseArticle(link, browser) {
 
             let publishTimeStamp = null;
             let publishTimeStampElement = document.querySelector('.c-assetAuthor_date time');
-            // If the article is in video category, then timestamp is associated with different class as in other categories
+            /* If the article is in video category, then timestamp is associated with
+             * different class.
+            */
             if (!publishTimeStampElement) {
                 publishTimeStampElement = document.querySelector('.info-timeDate time');
             }
@@ -127,12 +137,14 @@ async function parseArticle(link, browser) {
         }
 
         return result;
+
     } catch (error) {
         console.log(error);
     }
 }
 
-async function printPDFArticle(link, browser) {
+// Create pdf of article.
+async function getPdfArticle(link, browser) {
     try {
         let shouldCloseBrowser = false;
 
@@ -144,19 +156,21 @@ async function printPDFArticle(link, browser) {
         const page = await browser.newPage();
 
         await page.goto(link);
-        const articlePDF = await page.pdf({ format: 'A4', printBackground: true });
+        const articlePdf = await page.pdf({ format: 'A4', printBackground: true });
 
         if (shouldCloseBrowser) {
             await browser.close();
         }
 
-        return articlePDF;
+        return articlePdf;
+
     } catch (error) {
         console.log(error);
     }
 }
 
-async function screenshotArticle(link, browser) {
+// Create full page screenshot image of article.
+async function getScreenshotArticle(link, browser) {
     try {
         let shouldCloseBrowser = false;
 
@@ -175,6 +189,7 @@ async function screenshotArticle(link, browser) {
         }
 
         return articleScreenshot;
+
     } catch (error) {
         console.log(error);
     }
@@ -182,5 +197,5 @@ async function screenshotArticle(link, browser) {
 
 exports.parseLatestCnetArticles = parseLatestCnetArticles;
 exports.parseArticle = parseArticle;
-exports.printPDFArticle = printPDFArticle;
-exports.screenshotArticle = screenshotArticle;
+exports.getPdfArticle = getPdfArticle;
+exports.getScreenshotArticle = getScreenshotArticle;
